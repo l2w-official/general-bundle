@@ -1,0 +1,27 @@
+{
+    "name": "learntowin/general-bundle",
+    "type": "symfony-bundle",
+    "description": "Learn To Win Bundle for general shared code",
+    "keywords": ["symfony", "bundle", "general"],
+    "homepage": "https://www.learntowin.com",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.0",
+        "symfony/framework-bundle": ">= 6.1",
+        "symfony/http-kernel": ">= 6.1",
+        "doctrine/dbal": "^3.6"
+    },
+    "require-dev": {
+        "symfony/phpunit-bridge": ">= 6.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "LearnToWin\\GeneralBundle\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "LearnToWin\\Tests\\": "tests/"
+        }
+    }
+}
