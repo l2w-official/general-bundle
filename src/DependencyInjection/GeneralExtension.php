@@ -14,6 +14,11 @@ class GeneralExtension extends Extension implements PrependExtensionInterface
 
     public function prepend(ContainerBuilder $container): void
     {
+        $this->addDoctrineTypes($container);
+    }
+
+    private function addDoctrineTypes(ContainerBuilder $container): void
+    {
         $bundles = $container->getParameter('kernel.bundles');
         if (isset($bundles['DoctrineBundle'])) {
             $container->prependExtensionConfig('doctrine', [

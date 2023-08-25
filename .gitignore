@@ -1,4 +1,4 @@
 var/
 vendor/
 .vscode/
-composer.lock
+.idea/
