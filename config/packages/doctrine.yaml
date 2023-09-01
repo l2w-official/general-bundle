@@ -1,4 +1,0 @@
-doctrine:
-    dbal:
-        types:
-            datetime_immutable: \LearnToWin\GeneralBundle\Doctrine\Types\DateTimeMicrosecondsType
