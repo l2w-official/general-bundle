@@ -21,24 +21,26 @@ To add this bundle to your project, add the following to your composer.json:
       "type": "vcs",
       "url": "git@github.com:l2w-official/general_bundle.git"
     }
-  ],
-  "extra": {
-    "symfony": {
-      "allow-contrib": false,
-      "require": "6.2.*",
-      "endpoint": [
-        "https://api.github.com/repos/l2w-official/recipes/contents/index.json",
-        "flex://defaults"
-      ]
-    }
-  }
+  ]
 }
 ```
 
-Then run `composer require learn-to-win/general-bundle:^0.1`.
+For local development add this instead:
+
+```json
+{
+  "repositories": [
+    {
+      "type": "path",
+      "url": "/path/to/general_bundle"
+    }
+  ]
+}
+```
+
+Then run `composer require learn-to-win/general-bundle`.
 
 ## Development Setup
-
 
 ## Configuration
 
@@ -54,8 +56,17 @@ This is enabled automatically by the bundle adding the following to your `config
 doctrine:
     dbal:
         types:
-            datetime: LearnToWin\SymfonyDoctrineDbalTypes\DateTimeMicrosecondsType
+          datetime_immutable: LearnToWin\SymfonyDoctrineDbalTypes\DateTimeMicrosecondsType
 ```
+
+So you only need to use the type datetime_immutable to any date time properties on entities:
+
+Example:
+```php
+#[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: false)]
+public \DateTimeInterface $createdAt;
+```
+
 ### RabbitMQ Entity Events
 
 This will create a doctrine listener, this will listen for postPersist, postUpdate, and postDelete events.
@@ -74,34 +85,51 @@ LearnToWin\GeneralBundle\Message\EntityMessage
 }
 ```
 
-#### Message exchange/queue config:
+#### Publish config
 
-config/packages/messenger.yml
+The following will be configured by the bundle to allow for publishing of the events:
 
 ```yaml
 framework:
-  messenger:
-    transports:
-            rabbit_entity_publish:
+      messenger:
+            transports:
+                rabbit_entity_publish:
+                    dsn: '%env(MESSENGER_TRANSPORT_DSN_RABBIT)%'
+                    options:
+                        exchange:
+                            name: entity_event
+                            type: topic
+                        queues: []
+
+            routing:
+                'LearnToWin\GeneralBundle\Message\EntityMessage':
+                    - 'rabbit_entity_publish'
+```
+
+#### Message exchange/queue config:
+
+If you would like to configure a subscriber you can add a new transport for the messages:
+
+`config/packages/messenger.yml`
+
+```yaml
+framework:
+    messenger:
+        transports:
+            rabbit_entity_subscribe:
                 dsn: '%env(MESSENGER_TRANSPORT_DSN_RABBIT)%'
                 options:
                     exchange:
                         name: entity_event
                         type: topic
-                    queues: []
-
-            rabbit_entity_subscribe:
-              dsn: '%env(MESSENGER_TRANSPORT_DSN_RABBIT)%'
-              options:
-                exchange:
-                  name: entity_event
-                  type: topic
                 queues:
-                  user:
-                    binding_keys: ['user.persist'] # resource.action, use * to represent wildcard like `user.*` for all actions
+                    myservice_user_entity:
+                      # resource.action, use * to represent wildcard like `user.*` for all actions
+                      binding_keys: ['user.persist'] 
 
     routing:
-      'LearnToWin\GeneralBundle\Message\EntityMessage': ['rabbit_entity_publish', 'rabbit_entity_subscribe']
+      'LearnToWin\GeneralBundle\Message\EntityMessage':
+          - 'rabbit_entity_subscribe'
 ```
 
 #### Consuming messages

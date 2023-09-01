@@ -8,6 +8,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
+use UnitEnum;
 
 class GeneralExtension extends Extension implements PrependExtensionInterface
 {
@@ -22,8 +23,21 @@ class GeneralExtension extends Extension implements PrependExtensionInterface
 
     public function prepend(ContainerBuilder $container): void
     {
-        // Add the messenger configuration for the publishing part of entity events to rabbitmq
         $bundles = $container->getParameter('kernel.bundles');
+        $this->addMessengerConfig($bundles, $container);
+        $this->addDoctrineTypeConfig($bundles, $container);
+    }
+
+    /**
+     * Adds the messenger configuration to the framework config for the rabbit entity publish transport
+     * @param array|bool|float|int|string|UnitEnum|null $bundles
+     * @param ContainerBuilder $container
+     * @return void
+     */
+    private function addMessengerConfig(
+        array|bool|float|int|null|string|UnitEnum $bundles,
+        ContainerBuilder $container
+    ): void {
         if (isset($bundles['FrameworkBundle'])) {
             // create the configuration array
             $configs = [
@@ -47,6 +61,30 @@ class GeneralExtension extends Extension implements PrependExtensionInterface
             ];
 
             $container->prependExtensionConfig('framework', $configs);
+        }
+    }
+
+    /**
+     * Adds the doctrine type configuration to the doctrine config for the microsecond datetime type
+     * @param UnitEnum|float|int|bool|array|string|null $bundles
+     * @param ContainerBuilder $container
+     * @return void
+     */
+    private function addDoctrineTypeConfig(
+        UnitEnum|float|int|bool|array|string|null $bundles,
+        ContainerBuilder $container
+    ): void {
+        if (isset($bundles['DoctrineBundle'])) {
+            // create the configuration array
+            $configs = [
+                'dbal' => [
+                    'types' => [
+                        'datetime_immutable' => '\LearnToWin\GeneralBundle\Doctrine\Types\DateTimeMicrosecondsType',
+                    ],
+                ],
+            ];
+
+            $container->prependExtensionConfig('doctrine', $configs);
         }
     }
 }
