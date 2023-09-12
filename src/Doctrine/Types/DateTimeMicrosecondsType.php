@@ -8,8 +8,6 @@ use Doctrine\DBAL\Types\Type;
 
 /**
  * Override datetime datatype to support microseconds.
- *
- * @todo: Replace with package at some point.
  */
 class DateTimeMicrosecondsType extends Type
 {

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services
+                               http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <services>
+        <service
+            id="ltw_general.entity_event"
+            class="LearnToWin\GeneralBundle\Service\EntityEvent"
+            public="false"
+            autowire="true"/>
+        <service id="LearnToWin\GeneralBundle\Service\EntityEvent" alias="ltw_general.entity_event" public="false"/>
+        <service id="ltw_general.entity_event_listener"
+                 class="LearnToWin\GeneralBundle\EventListener\DatabaseActivitySubscriber"
+                 autowire="true">
+            <tag name="doctrine.event_listener" event="postPersist"/>
+            <tag name="doctrine.event_listener" event="postUpdate"/>
+            <tag name="doctrine.event_listener" event="postRemove"/>
+        </service>
+    </services>
+</container>
