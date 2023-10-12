@@ -30,7 +30,7 @@ class GeneralExtension extends Extension implements PrependExtensionInterface
 
     /**
      * Adds the messenger configuration to the framework config for the rabbit entity publish transport
-     * @param array|bool|float|int|string|UnitEnum|null $bundles
+     * @param array<string,mixed>|bool|float|int|string|UnitEnum|null $bundles
      * @param ContainerBuilder $container
      * @return void
      */
@@ -66,7 +66,7 @@ class GeneralExtension extends Extension implements PrependExtensionInterface
 
     /**
      * Adds the doctrine type configuration to the doctrine config for the microsecond datetime type
-     * @param UnitEnum|float|int|bool|array|string|null $bundles
+     * @param UnitEnum|float|int|bool|array<string>|string|null $bundles
      * @param ContainerBuilder $container
      * @return void
      */

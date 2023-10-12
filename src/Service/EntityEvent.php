@@ -23,6 +23,12 @@ readonly class EntityEvent
     ) {
     }
 
+    /**
+     * @param string $action
+     * @param mixed $entity
+     * @param array<string>|string|null $groups
+     * @return void
+     */
     public function sendEntityEventMessage(string $action, mixed $entity, array|null|string $groups = null): void
     {
         // Wrap this in a try/catch block to prevent Doctrine from throwing exceptions if we can't send the message
@@ -31,7 +37,7 @@ readonly class EntityEvent
         try {
             // Set up the routing key for this message
             $resource = (new ReflectionClass($entity))->getShortName();
-            $routingKey = strtolower($resource).'.'.$action;
+            $routingKey = strtolower($resource) . '.' . $action;
 
             // Serialize the entity to JSON
             $context = (new ObjectNormalizerContextBuilder())->withGroups($groups)->toArray();
@@ -49,7 +55,7 @@ readonly class EntityEvent
             ]);
 
             // Send the message
-            $this->logger->info('Sending message: ('.$messageId.') ['.$routingKey.'] - '.$data);
+            $this->logger->info('Sending message: (' . $messageId . ') [' . $routingKey . '] - ' . $data);
             $this->messageBus->dispatch($envelope);
         } catch (\Exception $e) {
             $this->logger->critical($e->getMessage(), [
