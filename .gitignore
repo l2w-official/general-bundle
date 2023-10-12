@@ -3,3 +3,4 @@ vendor/
 .vscode/
 .idea/
 composer.lock
+.php-cs-fixer.cache
