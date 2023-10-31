@@ -5,9 +5,10 @@ namespace LearnToWin\GeneralBundle\EventListener;
 use Doctrine\ORM\Event\PostPersistEventArgs;
 use Doctrine\ORM\Event\PostRemoveEventArgs;
 use Doctrine\ORM\Event\PostUpdateEventArgs;
+use LearnToWin\GeneralBundle\Attribute\EntityEventAttribute;
 use LearnToWin\GeneralBundle\Service\EntityEvent;
 
-readonly class DatabaseActivitySubscriber
+readonly class EntityEventDatabaseSubscriber
 {
     public function __construct(private EntityEvent $entityEvent)
     {
@@ -15,16 +16,16 @@ readonly class DatabaseActivitySubscriber
 
     public function postPersist(PostPersistEventArgs $args): void
     {
-        $this->entityEvent->sendEntityEventMessage('persist', $args->getObject(), ['entity_event']);
+        $this->entityEvent->sendEntityEventMessage(EntityEventAttribute::ACTION_PERSIST, $args->getObject());
     }
 
     public function postRemove(PostRemoveEventArgs $args): void
     {
-        $this->entityEvent->sendEntityEventMessage('remove', $args->getObject(), ['entity_event']);
+        $this->entityEvent->sendEntityEventMessage(EntityEventAttribute::ACTION_REMOVE, $args->getObject());
     }
 
     public function postUpdate(PostUpdateEventArgs $args): void
     {
-        $this->entityEvent->sendEntityEventMessage('update', $args->getObject(), ['entity_event']);
+        $this->entityEvent->sendEntityEventMessage(EntityEventAttribute::ACTION_UPDATE, $args->getObject());
     }
 }

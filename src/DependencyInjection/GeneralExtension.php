@@ -17,6 +17,7 @@ class GeneralExtension extends Extension implements PrependExtensionInterface
      */
     public function load(array $configs, ContainerBuilder $container): void
     {
+        // We use XML since we know the loader is available, yaml loader may not be.
         $loader = new XmlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $loader->load('services.xml');
     }

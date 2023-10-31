@@ -11,7 +11,7 @@
             autowire="true"/>
         <service id="LearnToWin\GeneralBundle\Service\EntityEvent" alias="ltw_general.entity_event" public="false"/>
         <service id="ltw_general.entity_event_listener"
-                 class="LearnToWin\GeneralBundle\EventListener\DatabaseActivitySubscriber"
+                 class="EntityEventDatabaseSubscriber"
                  autowire="true">
             <tag name="doctrine.event_listener" event="postPersist"/>
             <tag name="doctrine.event_listener" event="postUpdate"/>
