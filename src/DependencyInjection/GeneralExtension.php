@@ -39,20 +39,24 @@ class GeneralExtension extends Extension implements PrependExtensionInterface
         ContainerBuilder $container
     ): void {
         if (isset($bundles['FrameworkBundle'])) {
-            // create the configuration array
+            $transport = 'in-memory://';
+            if (getenv('APP_ENV') !== 'test') {
+                $transport = [
+                    'dsn' => getenv('MESSENGER_TRANSPORT_DSN_RABBIT'),
+                    'options' => [
+                        'exchange' => [
+                            'name' => 'entity_event',
+                            'type' => 'topic',
+                        ],
+                        'queues' => []
+                    ],
+                ];
+            }
+
             $configs = [
                 'messenger' => [
                     'transports' => [
-                        'rabbit_entity_publish' => [
-                            'dsn' => getenv('MESSENGER_TRANSPORT_DSN_RABBIT'),
-                            'options' => [
-                                'exchange' => [
-                                    'name' => 'entity_event',
-                                    'type' => 'topic',
-                                ],
-                                'queues' => []
-                            ],
-                        ],
+                        'rabbit_entity_publish' => $transport,
                     ],
                     'routing' => [
                         'LearnToWin\GeneralBundle\Message\EntityMessage' => ['rabbit_entity_publish'],

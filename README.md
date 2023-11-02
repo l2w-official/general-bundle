@@ -32,13 +32,16 @@ For local development add this instead:
   "repositories": [
     {
       "type": "path",
-      "url": "/path/to/general_bundle"
+      "url": "/path/to/general_bundle",
+      "options": {
+        "symlink": true
+      }
     }
   ]
 }
 ```
 
-Then run `composer require learn-to-win/general-bundle`.
+Then run `composer require learn-to-win/general-bundle`. Or ensure your package is listed as `"learn-to-win/general-bundle": "*",`
 
 ## Development Setup
 
@@ -91,19 +94,24 @@ The following will be configured by the bundle to allow for publishing of the ev
 
 ```yaml
 framework:
-      messenger:
-            transports:
-                rabbit_entity_publish:
-                    dsn: '%env(MESSENGER_TRANSPORT_DSN_RABBIT)%'
-                    options:
-                        exchange:
-                            name: entity_event
-                            type: topic
-                        queues: []
+  messenger:
+    transports:
+      rabbit_entity_publish:
+        dsn: '%env(MESSENGER_TRANSPORT_DSN_RABBIT)%'
+        options:
+          exchange:
+            name: entity_event
+            type: topic
+          queues: [ ]
 
-            routing:
-                'LearnToWin\GeneralBundle\Message\EntityMessage':
-                    - 'rabbit_entity_publish'
+    routing:
+      'LearnToWin\GeneralBundle\Message\EntityMessage':
+        - 'rabbit_entity_publish'
+when@test:
+  framework:
+    messenger:
+      transports:
+        rabbit_entity_publish: 'in-memory://'
 ```
 
 #### Message exchange/queue config:
@@ -125,6 +133,9 @@ framework:
                 queues:
                     myservice_user_entity:
                       # resource.action, use * to represent wildcard like `user.*` for all actions
+                      # format = entity.action
+                      #  Where entity is the lowercase entity name like user, organization, etc
+                      #  and action is one of persist, update, remove
                       binding_keys: ['user.persist'] 
 
     routing:
