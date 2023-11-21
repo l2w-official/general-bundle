@@ -5,7 +5,7 @@
     "keywords": ["symfony", "bundle", "general"],
     "homepage": "https://www.learntowin.com",
     "license": "proprietary",
-    "version": "0.2.2",
+    "version": "0.2.3",
     "require": {
         "php": ">=8.2",
         "doctrine/dbal": "^3.6",
@@ -15,7 +15,8 @@
         "doctrine/orm": "^2.16",
         "symfony/monolog-bundle": "^3.8",
         "symfony/uid": "^6.3",
-        "api-platform/core": "^3.2"
+        "api-platform/core": "^3.2",
+        "doctrine/doctrine-bundle": "^2.11"
     },
     "require-dev": {
         "symfony/dependency-injection": "^6.3",

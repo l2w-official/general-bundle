@@ -3,10 +3,13 @@
 namespace LearnToWin\GeneralBundle\Filter;
 
 use ApiPlatform\Doctrine\Orm\Filter\AbstractFilter;
+use ApiPlatform\Doctrine\Orm\PropertyHelperTrait;
 use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
+use ApiPlatform\Exception\InvalidArgumentException;
 use ApiPlatform\Metadata\Operation;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
+use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -14,48 +17,11 @@ use Symfony\Component\Uid\Uuid;
  */
 class UuidFilter extends AbstractFilter
 {
-    /**
-     * @inheritDoc
-     * @return array<mixed>
-     */
-    public function getDescription(string $resourceClass): array
-    {
-        $description = [];
-
-        $properties = $this->getProperties();
-
-        if (null === $properties) {
-            $properties = array_fill_keys($this->getClassMetadata($resourceClass)->getFieldNames(), null);
-        }
-
-        foreach ($properties as $property => $unused) {
-            if (!$this->isPropertyMapped($property, $resourceClass)) {
-                continue;
-            }
-
-            $filterParameterNames = [$property, $property . '[]'];
-
-            foreach ($filterParameterNames as $filterParameterName) {
-                $description[$filterParameterName] = [
-                    'property' => $property,
-                    'type' => 'uuid',
-                    'required' => false,
-                    'strategy' => 'exact',
-                    'is_collection' => str_ends_with((string)$filterParameterName, '[]'),
-                    'swagger' => [
-                        'type' => 'uuid',
-                    ],
-                ];
-            }
-        }
-
-        return $description;
-    }
+    use PropertyHelperTrait;
 
     /**
-     * @inheritDoc
-     * @param mixed $value
      * @param array<mixed> $context
+     * @param mixed $value
      */
     protected function filterProperty(
         string $property,
@@ -67,9 +33,15 @@ class UuidFilter extends AbstractFilter
         array $context = []
     ): void {
         if (
-            !$this->isPropertyEnabled($property, $resourceClass) ||
-            !$this->isPropertyMapped($property, $resourceClass)
+            !$this->isPropertyEnabled($property, $resourceClass)
+            || !$this->isPropertyMapped($property, $resourceClass)
+            || !$this->isUuidField($property, $resourceClass)
         ) {
+            return;
+        }
+
+        $values = $this->normalizeValues($value, $property);
+        if (null === $values) {
             return;
         }
 
@@ -89,23 +61,91 @@ class UuidFilter extends AbstractFilter
 
         $valueParameter = $queryNameGenerator->generateParameterName($field);
 
-        /** @var class-string $resourceClass */
-        $type = $this->managerRegistry
-            ->getManagerForClass($resourceClass)
-            ?->getClassMetadata($resourceClass)
-            ->getTypeOfField($field);
-
-        if (is_array($value)) {
+        if (1 === \count($values)) {
             $queryBuilder
-                ->andWhere(sprintf('%s.%s IN (:%s)', $alias, $field, $valueParameter))
+                ->andWhere(sprintf('%s.%s = :%s', $alias, $field, $valueParameter))
                 ->setParameter(
                     $valueParameter,
-                    array_map(static fn ($uuid) => Uuid::fromString($uuid)->toBinary(), $value)
+                    $values[0],
+                    (string)$this->getDoctrineFieldType($property, $resourceClass)
                 );
         } else {
             $queryBuilder
-                ->andWhere(sprintf('%s.%s = :%s', $alias, $field, $valueParameter))
-                ->setParameter($valueParameter, $value, $type);
+                ->andWhere(sprintf('%s.%s IN (:%s)', $alias, $field, $valueParameter))
+                ->setParameter($valueParameter, $values);
         }
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    public function getDescription(string $resourceClass): array
+    {
+        $description = [];
+
+        $properties = $this->getProperties();
+        if (null === $properties) {
+            $properties = array_fill_keys($this->getClassMetadata($resourceClass)->getFieldNames(), null);
+        }
+
+        foreach ($properties as $property => $strategy) {
+            if (!$this->isPropertyMapped($property, $resourceClass)) {
+                continue;
+            }
+
+            $propertyName = $this->normalizePropertyName($property);
+            $filterParameterNames = [$propertyName, $propertyName . '[]'];
+            foreach ($filterParameterNames as $filterParameterName) {
+                $description[$filterParameterName] = [
+                    'property' => $propertyName,
+                    'type' => $this->getDoctrineFieldType($property, $resourceClass),
+                    'required' => false,
+                    'is_collection' => str_ends_with((string)$filterParameterName, '[]'),
+                    'openapi' => [
+                        'allowReserved' => false,
+                        'allowEmptyValue' => true,
+                        'explode' => false,
+                    ],
+                ];
+            }
+        }
+
+        return $description;
+    }
+
+    private function isUuidField(string $property, string $resourceClass): bool
+    {
+        return UuidType::NAME === $this->getDoctrineFieldType($property, $resourceClass);
+    }
+
+    private function normalizeValues($value, string $property): ?array
+    {
+        if (!is_string($value) && !($value instanceof Uuid) && !\is_array($value)) {
+            $this->getLogger()->notice('Invalid filter ignored', [
+                'exception' => new InvalidArgumentException(sprintf('Invalid uuid value for "%s" property', $property)),
+            ]);
+
+            return null;
+        }
+
+        $values = (array)$value;
+        foreach ($values as $key => $value) {
+            if (is_string($value)) {
+                $values[$key] = Uuid::fromString($value)->toBinary();
+            } elseif ($value instanceof Uuid) {
+                $values[$key] = $value->toBinary();
+            } else {
+                unset($values[$key]);
+            }
+        }
+
+        if (empty($values)) {
+            $error = 'At least one value is required, multiple values should be in "';
+            $error .= $property . '[]=firstvalue&' . $property . '[]=secondvalue" format';
+            $this->getLogger()->notice('Invalid filter ignored', ['exception' => new InvalidArgumentException($error)]);
+            return null;
+        }
+
+        return array_values($values);
     }
 }
