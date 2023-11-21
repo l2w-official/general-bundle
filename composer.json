@@ -5,7 +5,7 @@
     "keywords": ["symfony", "bundle", "general"],
     "homepage": "https://www.learntowin.com",
     "license": "proprietary",
-    "version": "0.2.3",
+    "version": "0.2.4",
     "require": {
         "php": ">=8.2",
         "doctrine/dbal": "^3.6",
